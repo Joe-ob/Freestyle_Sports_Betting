@@ -1,6 +1,9 @@
 ##Base Code
 import json
 import requests
+from datetime import datetime 
+import dateutil.parser
+
 # An api key is emailed to you when you sign up to a plan
 api_key = "46a70b05e16c5bdb663037f8eb80a31b"
 # First get a list of in-season sports
@@ -22,6 +25,20 @@ if not sports_json['success']:
 #    print(sports_json['data'][3])
 # To get odds for a sepcific sport, use the sport key from the last request
 #   or set sport to "upcoming" to see live and upcoming across all sports
+
+###User Input for the Zip Code (with Data Validation) to verify Legal Betting in each State
+zip_code = input("Please input your Zip Code: ")
+try:
+  if (len(zip_code)) != 5: 
+    raise ValueError()
+  elif zip_code.isnumeric() == False:
+    raise ValueError()
+except ValueError:
+  print("Error: Please Enter a valid 5 digit, numeric zip code")
+  exit()
+
+
+#Use Will's code to say if you live in a certain state, say online betting is illegal
 
 
 ###User Input for Sport Selection
@@ -66,8 +83,25 @@ else:
     # odds_json['data'] contains a list of live and 
     #   upcoming events and odds for different bookmakers.
     # Events are ordered by start time (live events are first)
-    print()
-    print("Good")
+    print("--------------------")
+    print("Disclaimer: This app is not for gambling, it only displays odds, you must go to the websites displayed to place your bet.")
+    print("--------------------")
+    print("FYI: These odds show your return on investment. If you invest one dollar on the team on the left or right, and they win, you will recieve the corresponding winnings in return. Good Luck Betting!")
+    print("--------------------")
+    print("If no games appear, then that league is not playing today, try another sport or check back later.")
+    print("--------------------")
+    for item in odds_json['data']:
+    #print(item.keys())
+        commence_datetime = item['commence_time']
+        game_start_datetime = dateutil.parser.parse(commence_datetime)
+        game_start_date = game_start_datetime.date()
+        game_start_time = game_start_datetime.time()
+        if game_start_date == datetime.now().date():
+            print("For the game with the", item['teams'][0], "playing against the", item['teams'][1], "that starts at", game_start_time, "on", game_start_date)
+            for site in item["sites"]:
+                print("The odds on ", site['site_nice'], "are", site['odds']['spreads']['odds'])
+            print("-----")
+            print("-----")
         #'Successfully got {} events'.format(len(odds_json['data'])),
         #'Here\'s the first event:'
     
@@ -83,26 +117,10 @@ else:
 ###Figuring out how to search by team
 #team_selection = input("Please enter the name of the team you would like to search for: ")
 
-for item in odds_json['data']:
-    for teams_in_game in item['teams']:
-        print(teams_in_game)
-    for site in item["sites"]:
-        for option in site:
-            print(option['site_nice'])
-    print("-----")
-    print("-----")
-    print("-----")
 
 
 
 
-####User Input for the Zip Code (with Data Validation) to verify Legal Betting in each State
-#zip_code = input("Please input your Zip Code: ")
-#try:
-#  if (len(zip_code)) != 5: 
-#    raise ValueError()
-#  elif zip_code.isnumeric() == False:
-#    raise ValueError()
-#except ValueError:
-#  print("Error: Please Enter a valid 5 digit, numeric zip code")
-#  exit()
+
+
+
