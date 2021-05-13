@@ -1,0 +1,2 @@
+conda create -n betting-env python=3.8
+conda activate betting-env

@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # An api key is emailed to you when you sign up to a plan
-api_key="46a70b05e16c5bdb663037f8eb80a31b"
+api_key=os.environ.get("API_KEY")
 # First get a list of in-season sports
 
 sports_response = requests.get('https://api.the-odds-api.com/v3/sports', params={
