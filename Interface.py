@@ -5,11 +5,12 @@ from datetime import datetime
 import dateutil.parser
 import os
 from dotenv import load_dotenv
+import pytz
 
 load_dotenv()
 
 # An api key is emailed to you when you sign up to a plan
-api_key="46a70b05e16c5bdb663037f8eb80a31b"
+api_key = os.environ['API_KEY']
 # First get a list of in-season sports
 
 sports_response = requests.get('https://api.the-odds-api.com/v3/sports', params={
@@ -76,7 +77,7 @@ odds_response = requests.get('https://api.the-odds-api.com/v3/odds', params={
     'sport': sport_selection,                                                         #This should definitely be a user input
     'region': 'us', # uk | us | eu | au                                         #I think we assume US
     'mkt': 'spreads', # h2h | spreads | totals           
-    'dateFormat': 'iso'                      #This might be a user input
+    'dateFormat': 'unix'                      #This might be a user input
 })
 odds_json = json.loads(odds_response.text)
 if not odds_json['success']:
@@ -91,22 +92,25 @@ else:
     print("--------------------")
     print("Disclaimer: This app is not for gambling, it only displays odds, you must go to the websites displayed to place your bet.")
     print("--------------------")
-    print("FYI: These odds show your return on investment. If you invest one dollar on the team on the left or right, and they win, you will recieve the corresponding winnings in return. Good Luck Betting!")
+    print("Understanding the Odds: These odds show your return on investment. If you bet one dollar on the team on the left or right, and they win, you will recieve the corresponding winnings in return. If your team loses, you recieve nothing. Good Luck Betting!")
     print("--------------------")
     print("If no games appear, then that league is not playing today, try another sport or check back later.")
     print("--------------------")
+
     for item in odds_json['data']:
-    #print(item.keys())
+        #print(item.keys())
         commence_datetime = item['commence_time']
-        game_start_datetime = dateutil.parser.parse(commence_datetime)
-        game_start_date = game_start_datetime.date()
-        game_start_time = game_start_datetime.time()
-        if game_start_date == datetime.now().date():
-            print("For the game with the", item['teams'][0], "playing against the", item['teams'][1], "that starts at", game_start_time, "on", game_start_date)
-            for site in item["sites"]:
-                print("The odds on ", site['site_nice'], "are", site['odds']['spreads']['odds'])
-            print("-----")
-            print("-----")
+        ts = int(commence_datetime)
+        dt_utc = datetime.utcfromtimestamp(ts)
+        dt_est = dt_utc.astimezone(pytz.timezone('US/Eastern'))
+        game_start_date = dt_est.date()
+        game_start_time = dt_est.time()
+        print(f"For the game with between {item['teams']} that starts at {game_start_time} on {game_start_date},")
+        for site in item["sites"]:
+            print(f"The odds on  {site['site_nice']} are {site['odds']['spreads']['odds']}")
+        print("-----")
+        print("-----")
+
         #'Successfully got {} events'.format(len(odds_json['data'])),
         #'Here\'s the first event:'
     
