@@ -1,11 +1,14 @@
 ##Base Code
 import json
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 import time 
 import pytz
 
+
+# An api key is emailed to you when you sign up to a plan
 api_key = '46a70b05e16c5bdb663037f8eb80a31b'
+# First get a list of in-season sports
 
 sports_response = requests.get('https://api.the-odds-api.com/v3/sports', params={
     'api_key': api_key
@@ -13,11 +16,20 @@ sports_response = requests.get('https://api.the-odds-api.com/v3/sports', params=
 sports_json = json.loads(sports_response.text)
 if not sports_json['success']:
     print(
-        'There was a problem with the sports request:',
-        sports_json['msg']
+        'There was a problem with the sports request, please try again',
+        #sports_json['msg']
     )
+#else:
+#    print()
+#    print(
+#        'Successfully got {} sports'.format(len(sports_json['data'])),
+#        'Here\'s the first sport:'
+#    )
+#    print(sports_json['data'][3])
+# To get odds for a sepcific sport, use the sport key from the last request
+#   or set sport to "upcoming" to see live and upcoming across all sports
 
-
+###User Input for the Zip Code (with Data Validation) to verify Legal Betting in each State
 zip_code = input("Please input your Zip Code: ")
 try:
   if (len(zip_code)) != 5: 
@@ -54,60 +66,98 @@ elif sport_selection == 'hockey':
 elif sport_selection == 'basketball':
   sport_selection = 'basketball_nba'
 
-
-
-#sport_selection = 'baseball_mlb'                                                      
+                                                   
 odds_response = requests.get('https://api.the-odds-api.com/v3/odds', params={
-    'api_key': api_key,                                                         #This should be in a .env file as instructed in the ReadMe file
-    'sport': sport_selection,                                                         #This should definitely be a user input
-    'region': 'us', # uk | us | eu | au                                         #I think we assume US
+    'api_key': api_key,                                                         
+    'sport': sport_selection,                                                        
+    'region': 'us', # uk | us | eu | au                                         
     'mkt': 'spreads', # h2h | spreads | totals           
-    'dateFormat': 'unix'                      #This might be a user input
+    'dateFormat': 'unix'                      
 })
 odds_json = json.loads(odds_response.text)
 if not odds_json['success']:
     print(
-        'There was a problem with the odds request:',
-        odds_json['msg']
+        'There was a problem with the odds request, please try again',
+        #odds_json['msg']
     )
 else:
-    # odds_json['data'] contains a list of live and 
-    #   upcoming events and odds for different bookmakers.
-    # Events are ordered by start time (live events are first)
     print("--------------------")
-    print("Disclaimer: This app is not for gambling, it only displays odds, you must go to the websites displayed to place your bet.")
+    print("Disclaimer: This app is not for gambling, it only compares odds from different gambling websites to give you the best information. you must go to the websites displayed to place your bet.")
     print("--------------------")
-    print("Understanding the Odds: These odds show your return on investment. If you bet one dollar on the team on the left or right, and they win, you will recieve the corresponding winnings in return. If your team loses, you recieve nothing. Good Luck Betting!")
+    print("Understanding the Odds: These odds show your potential winnings on different websites. If you bet one dollar on the team on the left or right, and they win, you will recieve the corresponding winnings in return. If your team loses, you recieve nothing. Good Luck Betting!")
     print("--------------------")
 
+
+    a = []
+    teams = []
+    home_team = []
+    away_team = []
     if odds_json['success'] == True:
+      Team_name = input("Enter the name of the team you are looking for. If you want to search for all teams in this sport, type 'Go': ").split()
+      print("---------------")
+      for item in Team_name:
+        name_cap = item.capitalize()
+        teams.append(name_cap)
+      #print(teams)
       for item in odds_json['data']:
           #print(item.keys())
           commence_datetime = item['commence_time']
           ts = int(commence_datetime)
           dt_utc = datetime.utcfromtimestamp(ts)
-          dt_est = dt_utc.astimezone(pytz.timezone('US/Eastern'))
+          dt_diff = timedelta(hours=4)
+          dt_est = dt_utc - dt_diff
           game_start_date = dt_est.date()
           game_start_time = dt_est.time()
-          print(f"For the game between {item['teams']} that starts at {game_start_time} on {game_start_date},")
-          for site in item["sites"]:
+          home = item['teams'][0].split()
+          away = item['teams'][1].split()
+          for word in home:
+            home_team.append(word)
+          for word in away:
+            away_team.append(word)
+          if 'Go' in teams:
+            a.append(item['teams'])
+            print(f"For the game between {item['teams']} that starts at {game_start_time} on {game_start_date},")
+            for site in item["sites"]:
               print(f"The odds on  {site['site_nice']} are {site['odds']['spreads']['odds']}")
-          print("-----")
-          print("-----")
-    else:
-          print(f"It appears there are no {sport_key} games today, make sure this sport is in season or try another sport.")
+          check = all(item in home_team for item in teams) or all(item in away_team for item in teams)
+          if check is True:
+            a.append(item['teams'])
+            print(f"For the game between {item['teams']} that starts at {game_start_time} on {game_start_date},")
+            for site in item["sites"]:
+              print(f"The odds on  {site['site_nice']} are {site['odds']['spreads']['odds']}")
+            home_team.clear()
+            away_team.clear()
+          if check is False:
+            pass
+            home_team.clear()
+            away_team.clear()
 
+      if not a:
+          print("We could not find the team you were looking for, here are all of the upcoming games")
+          print("---------------")
+          for item in odds_json['data']:
+              commence_datetime = item['commence_time']
+              ts = int(commence_datetime)
+              dt_utc = datetime.utcfromtimestamp(ts)
+              dt_diff = timedelta(hours=4)
+              dt_est = dt_utc - dt_diff
+              game_start_date = dt_est.date()
+              game_start_time = dt_est.time()
+              print(f"For the game between {item['teams']} that starts at {game_start_time} on {game_start_date},")
+              for site in item["sites"]:
+                print(f"The odds on  {site['site_nice']} are {site['odds']['spreads']['odds']}")
+      else:
+          print(f"It appears there are no {sport_selection} games today, make sure this sport is in season or try another sport.")
 
-    
-    #game_odds = (odds_json['data'][3])
+    game_odds = (odds_json['data'][3])
 
+    # Check your usage
     print()
     print('Remaining requests', odds_response.headers['x-requests-remaining'])
     print('Used requests', odds_response.headers['x-requests-used'])
     
 
 
-###Figuring out how to search by team
 
 
 
