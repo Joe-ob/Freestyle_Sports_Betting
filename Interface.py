@@ -1,8 +1,8 @@
 ##Base Code
 import json
 import requests
-from datetime import datetime 
-import dateutil.parser
+from datetime import datetime
+import time 
 import os
 from dotenv import load_dotenv
 import pytz
@@ -94,22 +94,23 @@ else:
     print("--------------------")
     print("Understanding the Odds: These odds show your return on investment. If you bet one dollar on the team on the left or right, and they win, you will recieve the corresponding winnings in return. If your team loses, you recieve nothing. Good Luck Betting!")
     print("--------------------")
-    print("If no games appear, then that league is not playing today, try another sport or check back later.")
-    print("--------------------")
 
-    for item in odds_json['data']:
-        #print(item.keys())
-        commence_datetime = item['commence_time']
-        ts = int(commence_datetime)
-        dt_utc = datetime.utcfromtimestamp(ts)
-        dt_est = dt_utc.astimezone(pytz.timezone('US/Eastern'))
-        game_start_date = dt_est.date()
-        game_start_time = dt_est.time()
-        print(f"For the game with between {item['teams']} that starts at {game_start_time} on {game_start_date},")
-        for site in item["sites"]:
-            print(f"The odds on  {site['site_nice']} are {site['odds']['spreads']['odds']}")
-        print("-----")
-        print("-----")
+    if odds_json['success'] == True:
+      for item in odds_json['data']:
+          #print(item.keys())
+          commence_datetime = item['commence_time']
+          ts = int(commence_datetime)
+          dt_utc = datetime.utcfromtimestamp(ts)
+          dt_est = dt_utc.astimezone(pytz.timezone('US/Eastern'))
+          game_start_date = dt_est.date()
+          game_start_time = dt_est.time()
+          print(f"For the game between {item['teams']} that starts at {game_start_time} on {game_start_date},")
+          for site in item["sites"]:
+              print(f"The odds on  {site['site_nice']} are {site['odds']['spreads']['odds']}")
+          print("-----")
+          print("-----")
+    else:
+          print(f"It appears there are no {sport_key} games today, make sure this sport is in season or try another sport.")
 
         #'Successfully got {} events'.format(len(odds_json['data'])),
         #'Here\'s the first event:'
