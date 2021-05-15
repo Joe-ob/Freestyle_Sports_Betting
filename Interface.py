@@ -3,14 +3,9 @@ import json
 import requests
 from datetime import datetime
 import time 
-import os
 import pytz
 
-
-
-# An api key is emailed to you when you sign up to a plan
 api_key = '46a70b05e16c5bdb663037f8eb80a31b'
-# First get a list of in-season sports
 
 sports_response = requests.get('https://api.the-odds-api.com/v3/sports', params={
     'api_key': api_key
@@ -21,17 +16,8 @@ if not sports_json['success']:
         'There was a problem with the sports request:',
         sports_json['msg']
     )
-#else:
-#    print()
-#    print(
-#        'Successfully got {} sports'.format(len(sports_json['data'])),
-#        'Here\'s the first sport:'
-#    )
-#    print(sports_json['data'][3])
-# To get odds for a sepcific sport, use the sport key from the last request
-#   or set sport to "upcoming" to see live and upcoming across all sports
 
-###User Input for the Zip Code (with Data Validation) to verify Legal Betting in each State
+
 zip_code = input("Please input your Zip Code: ")
 try:
   if (len(zip_code)) != 5: 
@@ -111,12 +97,10 @@ else:
     else:
           print(f"It appears there are no {sport_key} games today, make sure this sport is in season or try another sport.")
 
-        #'Successfully got {} events'.format(len(odds_json['data'])),
-        #'Here\'s the first event:'
+
     
-    game_odds = (odds_json['data'][3])
-    #print(game_odds)
-    # Check your usage
+    #game_odds = (odds_json['data'][3])
+
     print()
     print('Remaining requests', odds_response.headers['x-requests-remaining'])
     print('Used requests', odds_response.headers['x-requests-used'])
@@ -124,7 +108,7 @@ else:
 
 
 ###Figuring out how to search by team
-#team_selection = input("Please enter the name of the team you would like to search for: ")
+
 
 
 
