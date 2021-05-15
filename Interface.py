@@ -4,13 +4,12 @@ import requests
 from datetime import datetime
 import time 
 import os
-from dotenv import load_dotenv
 import pytz
 
-load_dotenv()
+
 
 # An api key is emailed to you when you sign up to a plan
-api_key = os.environ['API_KEY']
+api_key = '46a70b05e16c5bdb663037f8eb80a31b'
 # First get a list of in-season sports
 
 sports_response = requests.get('https://api.the-odds-api.com/v3/sports', params={
